@@ -15,6 +15,7 @@ Pattern whiteSpaceBeg = Pattern.compile("^\\s+");
 
 @Override
 public void execute() {
+  //System.err.println("Running for "+doc.getName());
   FeatureMap dfm = doc.getFeatures();
   AnnotationSet oms = doc.getAnnotations("Original markups");
   store4field(doc,oms,"availability");
@@ -35,8 +36,8 @@ public void execute() {
   //add stuff that is special ...
   store4field(doc,oms,"keywords");
 
-  
-  dfm.put("bnc.imprint.n",gate.Utils.getOnlyAnn(oms.get("imprint")).getFeatures().get("n"));
+  String feature_n = getFeature(doc,oms,"imprint","n"); 
+  dfm.put("bnc.imprint.n",feature_n);
   dfm.put("bnc.id",gate.Utils.getOnlyAnn(oms.get("bncDoc")).getFeatures().get("xml:id"));
   dfm.put("bnc.catRef.targets",gate.Utils.getOnlyAnn(oms.get("catRef")).getFeatures().get("targets"));
   AnnotationSet changeAnns = oms.get("change");
@@ -55,8 +56,15 @@ public void execute() {
   }
 
   // Delete the span where the header is located
-  Annotation wtextAnn = gate.Utils.getOnlyAnn(oms.get("wtext"));
-  Long startDoc = gate.Utils.start(wtextAnn);
+  AnnotationSet spanAnns = oms.get("wtext");
+  if(spanAnns.size() == 0) {
+    spanAnns = oms.get("stext");
+  }
+  if(spanAnns.size() == 0) {
+    throw new RuntimeException("Neither wtext nor stext annotation in document "+doc.getName());
+  }
+  Annotation spanAnn = gate.Utils.getOnlyAnn(spanAnns);
+  Long startDoc = gate.Utils.start(spanAnn);
   try {
     doc.edit(0L,startDoc+1,new DocumentContentImpl(""));
   } catch (Exception ex) {
@@ -85,15 +93,20 @@ public void execute() {
     }
     Long start = gate.Utils.start(ann);
     Long end = gate.Utils.end(ann);
-    // add the actual token
-    FeatureMap fmAnn = ann.getFeatures();
-    gate.Utils.addAnn(keySet,start+wsBefore.length(),end-wsAfter.length(),"Token",
-      gate.Utils.featureMap("c5",fmAnn.get("c5"),"pos",fmAnn.get("pos"),"lemma",fmAnn.get("hw"),"kind","word"));
-    if(!wsAfter.isEmpty()) {
-      gate.Utils.addAnn(keySet,end-wsAfter.length(),end,"SpaceToken",gate.Utils.featureMap());      
-    }
-    if(!wsBefore.isEmpty()) {
-      gate.Utils.addAnn(keySet,start,start+wsBefore.length(),"SpaceToken",gate.Utils.featureMap());
+    // add the actual token, but make sure we did not find something that is 
+    // entirely white space! Oddly this exists a few times in the corpus!
+    if(wsBefore.length() == text.length()) {
+      gate.Utils.addAnn(keySet,start,end,"SpaceToken",gate.Utils.featureMap());
+    } else {
+      FeatureMap fmAnn = ann.getFeatures();
+      gate.Utils.addAnn(keySet,start+wsBefore.length(),end-wsAfter.length(),"Token",
+        gate.Utils.featureMap("c5",fmAnn.get("c5"),"pos",fmAnn.get("pos"),"lemma",fmAnn.get("hw"),"kind","word"));
+      if(!wsAfter.isEmpty()) {
+        gate.Utils.addAnn(keySet,end-wsAfter.length(),end,"SpaceToken",gate.Utils.featureMap());      
+      }
+      if(!wsBefore.isEmpty()) {
+        gate.Utils.addAnn(keySet,start,start+wsBefore.length(),"SpaceToken",gate.Utils.featureMap());
+      }
     }
   }
   AnnotationSet cAnns = oms.get("c");
@@ -117,5 +130,20 @@ private void store4field(Document doc, AnnotationSet set, String name) {
   }
 }
 
+// return the feature value of the first annotation of that type or null if no annotation
+private String getFeature(Document doc, AnnotationSet set, String type, String fname) {
+  String ret = null;
+  List<Annotation> anns = set.get(type).inDocumentOrder();
+  if(anns.size() > 0) {
+    if(anns.size() > 1) {
+      System.err.println(doc.getName()+": not exactly one annotation for "+type+", taking first");
+    }
+    Annotation ann = anns.get(0);
+    ret = (String)ann.getFeatures().get(fname);
+  } else {
+    System.err.println(doc.getName()+": no field "+type);
+  }
+  return ret;
+}
 
 

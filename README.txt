@@ -43,3 +43,9 @@ Annotations relevant for the actual text:
 * c: something about punctuation and quotes, needed in addition to "w". features: c5
 * mw: overlaps w annotations for multi-word stuff like "up to" and has feature c5=??
 * s: sentences, feature n
+
+To actually run the conversion:
+
+* copy or link the extracted BNC corpus so that the script finds a directory 2554 in the current directory
+* make sure runPipeline.sh is on the path in a version that already supports the option -A
+* run ./convert.sh
