@@ -6,7 +6,9 @@
 // * create Sentence annotations in the Key set based on the s annotations from the original XML
 
 import gate.*;
+import gate.corpora.*;
 import java.util.regex.*;
+import java.util.*;
 
 Pattern whiteSpaceEnd = Pattern.compile("\\s+$");
 Pattern whiteSpaceBeg = Pattern.compile("^\\s+");
@@ -23,7 +25,6 @@ public void execute() {
   store4field(doc,oms,"edition");
   store4field(doc,oms,"extent");
   store4field(doc,oms,"imprint");
-  store4field(doc,oms,"keywords");
   store4field(doc,oms,"profileDesc");
   store4field(doc,oms,"pubPlace");
   store4field(doc,oms,"publicationStmt");
@@ -32,6 +33,9 @@ public void execute() {
   store4field(doc,oms,"sourceDesc");
   store4field(doc,oms,"titleStmt");
   //add stuff that is special ...
+  store4field(doc,oms,"keywords");
+
+  
   dfm.put("bnc.imprint.n",gate.Utils.getOnlyAnn(oms.get("imprint")).getFeatures().get("n"));
   dfm.put("bnc.id",gate.Utils.getOnlyAnn(oms.get("bncDoc")).getFeatures().get("xml:id"));
   dfm.put("bnc.catRef.targets",gate.Utils.getOnlyAnn(oms.get("catRef")).getFeatures().get("targets"));
@@ -53,6 +57,12 @@ public void execute() {
   // Delete the span where the header is located
   Annotation wtextAnn = gate.Utils.getOnlyAnn(oms.get("wtext"));
   Long startDoc = gate.Utils.start(wtextAnn);
+  try {
+    doc.edit(0L,startDoc+1,new DocumentContentImpl(""));
+  } catch (Exception ex) {
+    System.err.println(doc.getName()+": could not edit");
+    ex.printStackTrace(System.err);
+  }
 
   AnnotationSet keySet = doc.getAnnotations("Key");
   AnnotationSet sentAnns = oms.get("s");
@@ -94,13 +104,16 @@ public void execute() {
 }
 
 private void store4field(Document doc, AnnotationSet set, String name) {
-  AnnotationSet anns = set.get(name);
-  if(anns.size() != 1) {
-    System.err.println(doc.getName()+": not exactly one annotation for "+name);
-  } else {
-    Annotation ann = gate.Utils.getOnlyAnn(anns);
+  List<Annotation> anns = set.get(name).inDocumentOrder();
+  if(anns.size() > 0) {
+    if(anns.size() > 1) {
+      System.err.println(doc.getName()+": not exactly one annotation for "+name+", taking first");
+    } 
+    Annotation ann = anns.get(0);
     String text = gate.Utils.cleanStringFor(doc,ann);
-    doc.getFeatures().put("bnc."+name,text);
+    doc.getFeatures().put("bnc."+name,text);  
+  } else {
+    System.err.println(doc.getName()+": no field "+name);
   }
 }
 
