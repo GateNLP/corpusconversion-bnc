@@ -1,0 +1,3 @@
+[submodule "gateplugin-Java"]
+	path = gateplugin-Java
+	url = https://github.com/johann-petrak/gateplugin-Java.git
