@@ -1,14 +1,36 @@
 # Conversion of the original British National Corpus documents, XML edition to GATE
 
 The files in this repository can be used to convert the original XML fiels from the BNC corpus
-(see http://ota.ox.ac.uk/desc/2554) to usable GATE documents.
+(see http://ota.ox.ac.uk/desc/2554) to usable GATE documents. 
 
-NOTE: this contains a pipeline for doing this which depends on the following tools and software, not included here:
-* the runPipeline.sh command from yodie-tools (gateservice2.dcs.shef.ac.uk:/data/git/yodie/yodie-tools)
-* the Java plugin is added as a submodule (arrgh I hate Groovy!)
+NOTE: this depends on the following tools and software, not included here:
+* the runPipeline.sh command from https://github.com/johann-petrak/gatetool-runpipeline and the bin directory of
+  that tool must be on the binary path
+* the Java plugin is added as a submodule (https://github.com/johann-petrak/gateplugin-Java)
+* GATE (version 8.x)
+* JAVA SDK
+* Ant
+
+## Preparation
+
+* Make sure the Java submodule is actually fetched and compiled
+  * `git submodule init`
+  * `git submodule update`
+  * `git submodule foreach ant`
+* Make sure the British National Corpus is available in some directory in unzipped for, the directory is usually called "2554"
+* The conversion script will copy the BNC corpus into a local temporary directory, so make sure there is enough disk space
+  on the disk which contains the current directory (about 4.4G needed)
+* The GATE documents will require about 114G of disk space
 
 
-Overview of how the conversion is done:
+## Run the conversion
+
+Just run the convert.sh script and pass the location of the BNC corpus and the desired output directory as arguments:
+
+`./convert.sh bnccorpusdir outputdir`
+
+
+## Overview of how the conversion is done:
 * Load original files into GATE in XML format, but set the option
   "add space on markup unpack if needed" to false
 * Now, in the "Original markups" set we get all the XML fields as annotations.
@@ -44,8 +66,3 @@ Annotations relevant for the actual text:
 * mw: overlaps w annotations for multi-word stuff like "up to" and has feature c5=??
 * s: sentences, feature n
 
-To actually run the conversion:
-
-* copy or link the extracted BNC corpus so that the script finds a directory 2554 in the current directory
-* make sure runPipeline.sh is on the path in a version that already supports the option -A
-* run ./convert.sh
