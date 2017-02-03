@@ -40,7 +40,7 @@ Just run the convert.sh script and pass the location of the BNC corpus and the d
   * bncDoc.xml:id  gets converted to id
   * catRef.targets
   * change: doc text is documentation of change, features date amd who give additional info, should get 
-    converted to single list? Should get converted to change.<date>.<who> and change.<date>
+    converted to single list? Should get converted to change.\<date\>.\<who\> and change.\<date\>
   * classCode: text and feature scheme
   * creation.date
   * date
@@ -56,7 +56,7 @@ Just run the convert.sh script and pass the location of the BNC corpus and the d
   * respStmt
   * sourceDesc
   * tagUsage: empty span annots with features gi and occurs. Should get converted to features
-    tagUsage.<gi>=<occurs> 
+    tagUsage.\<gi\>=\<occurs\> 
   * titleStmt
 
 Annotations relevant for the actual text:
